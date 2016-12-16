@@ -1,0 +1,38 @@
+import java.io.*;
+import java.util.List;
+
+import edu.stanford.nlp.ie.AbstractSequenceClassifier;
+import edu.stanford.nlp.ie.crf.CRFClassifier;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
+
+public class process {
+
+  public static void main(String[] args) throws IOException {
+    String serializedClassifier = "res/english.all.3class.distsim.crf.ser.gz";
+    AbstractSequenceClassifier<CoreLabel> classifier = CRFClassifier.getClassifierNoExceptions(serializedClassifier);
+
+    PrintStream fout = new PrintStream((new FileOutputStream("disworded_sina_news_with_attr_handled.txt")));
+    BufferedInputStream fin = new BufferedInputStream(new FileInputStream("disworded_sina_news_with_attr.txt"));
+    System.setIn(fin);
+    System.setOut(fout);
+
+    BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));
+    String s;
+    
+    while((s = cin.readLine()) != null) {
+      List<List<CoreLabel>> out = classifier.classify(s);
+      for (List<CoreLabel> sentence : out) {
+        for (CoreLabel word : sentence) {
+          if(word.get(CoreAnnotations.AnswerAnnotation.class).equals("O")) {
+            System.out.print(word.word()+' ');
+          } else {
+            System.out.print(word.word()+'/'+word.get(CoreAnnotations.AnswerAnnotation.class)+' ');
+          }
+        }
+        System.out.println();
+      }
+    }
+  }
+}
+
